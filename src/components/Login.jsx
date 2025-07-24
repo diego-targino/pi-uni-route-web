@@ -64,7 +64,7 @@ const Login = () => {
       await login(formData);
       navigate('/dashboard'); // Redirect to dashboard or main app
     } catch (error) {
-      console.error('Login error:', error);
+      // Error is already handled by the store
     }
   };
 

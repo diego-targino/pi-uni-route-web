@@ -494,3 +494,48 @@
   margin-top: 0.25rem;
   color: #666;
 }
+
+/* Modal specific auth styles */
+.modal-overlay .auth-card {
+  background: var(--surface);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+}
+
+.modal-overlay .auth-header {
+  padding: 1.5rem;
+  margin-bottom: 0;
+  border-bottom: 1px solid var(--border);
+  background: none;
+}
+
+.modal-overlay .auth-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary) !important;
+}
+
+.modal-overlay .auth-form {
+  padding: 1.5rem;
+}
+
+.modal-overlay .form-group label {
+  color: var(--text-primary) !important;
+}
+
+.modal-overlay .form-group input {
+  background: var(--background);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.modal-overlay .form-group input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}

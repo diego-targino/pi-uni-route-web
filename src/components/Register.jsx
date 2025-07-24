@@ -8,8 +8,7 @@ const Register = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    phone: ''
+    confirmPassword: ''
   });
   const [validationErrors, setValidationErrors] = useState({});
   const [passwordStrength, setPasswordStrength] = useState(0);
@@ -91,45 +90,8 @@ const Register = () => {
       errors.confirmPassword = 'Senhas não coincidem';
     }
     
-    if (!formData.phone.trim()) {
-      errors.phone = 'Telefone é obrigatório';
-    } else if (!/^\(\d{2}\)\s\d{4,5}-\d{4}$/.test(formData.phone)) {
-      errors.phone = 'Formato: (XX) XXXXX-XXXX';
-    }
-    
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
-  };
-
-  const formatPhone = (value) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-    
-    // Format based on length
-    if (digits.length <= 2) {
-      return `(${digits}`;
-    } else if (digits.length <= 7) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-    } else if (digits.length <= 11) {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-    } else {
-      return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
-    }
-  };
-
-  const handlePhoneChange = (e) => {
-    const formatted = formatPhone(e.target.value);
-    setFormData(prev => ({
-      ...prev,
-      phone: formatted
-    }));
-    
-    if (validationErrors.phone) {
-      setValidationErrors(prev => ({
-        ...prev,
-        phone: ''
-      }));
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -142,9 +104,9 @@ const Register = () => {
     try {
       const { confirmPassword, ...userData } = formData;
       await register(userData);
-      navigate('/dashboard'); // Redirect to dashboard or main app
+      navigate('/dashboard');
     } catch (error) {
-      console.error('Registration error:', error);
+      // Error is already handled by the store
     }
   };
 
@@ -194,23 +156,6 @@ const Register = () => {
             />
             {validationErrors.email && (
               <span className="field-error">{validationErrors.email}</span>
-            )}
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="phone">Telefone</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              value={formData.phone}
-              onChange={handlePhoneChange}
-              className={validationErrors.phone ? 'error' : ''}
-              placeholder="(XX) XXXXX-XXXX"
-              autoComplete="tel"
-            />
-            {validationErrors.phone && (
-              <span className="field-error">{validationErrors.phone}</span>
             )}
           </div>
 
