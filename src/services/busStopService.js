@@ -34,11 +34,12 @@ export const busStopService = {
       // Mapear resposta para camelCase se vier em PascalCase
       const data = Array.isArray(response.data) ? response.data : [];
       const busStops = data.map(stop => ({
-        id: stop.Id || stop.id,
-        name: stop.Name || stop.name,
-        description: stop.Description || stop.description,
-        latitude: stop.Latitude || stop.latitude,
-        longitude: stop.Longitude || stop.longitude
+        id: stop.id,
+        name: stop.name,
+        addressDetails: stop.addressDatails,
+        referencePoint: stop.referencePoint,
+        latitude: stop.latitude,
+        longitude: stop.longitude
       }));
       
       return busStops;
@@ -62,13 +63,12 @@ export const busStopService = {
     try {
       const response = await api.get(API_ENDPOINTS.BUS_STOPS.STOP_TIMES(busStopId));
       
-      // Mapear resposta para camelCase se vier em PascalCase
+      // Mapear resposta para camelCase baseado no formato real da API
       const data = Array.isArray(response.data) ? response.data : [];
       const stopTimes = data.map(time => ({
         id: time.Id || time.id,
-        routeName: time.RouteName || time.routeName,
-        arrivalTime: time.ArrivalTime || time.arrivalTime,
-        delay: time.Delay || time.delay
+        busType: time.BusType || time.busType,
+        expectedTime: time.ExpectedTime || time.expectedTime
       }));
       
       return stopTimes;

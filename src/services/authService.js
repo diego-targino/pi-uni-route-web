@@ -107,8 +107,8 @@ export const authService = {
 
       // Mapeia os campos para o formato esperado pela API
       const loginData = {
-        Mail: credentials.email || credentials.mail,
-        Password: credentials.password
+        mail: credentials.email || credentials.mail,
+        password: credentials.password
       };
       
       const response = await api.post(API_ENDPOINTS.AUTH.LOGIN, loginData);
@@ -127,15 +127,15 @@ export const authService = {
         
         // Mapeia a resposta para o formato usado no frontend (agora usando camelCase)
         const user = {
-          id: userData.Id || userData.id,
-          name: userData.Name || userData.name,
-          email: userData.Mail || userData.mail,
-          address: userData.Address || userData.address ? {
-            id: (userData.Address || userData.address).Id || (userData.Address || userData.address).id,
-            street: (userData.Address || userData.address).Street || (userData.Address || userData.address).street,
-            postalCode: (userData.Address || userData.address).PostalCode || (userData.Address || userData.address).postalCode,
-            latitude: (userData.Address || userData.address).Latitude || (userData.Address || userData.address).latitude,
-            longitude: (userData.Address || userData.address).Longitude || (userData.Address || userData.address).longitude
+          id: userData.id,
+          name: userData.name,
+          email: userData.mail,
+          address: userData.address ? {
+            id: userData.address.id,
+            street: userData.address.street,
+            postalCode: userData.address.postalCode,
+            latitude: userData.address.latitude,
+            longitude: userData.address.longitude
           } : null
         };
         
@@ -178,9 +178,9 @@ export const authService = {
 
       // Mapeia os campos para o formato esperado pela API
       const registerData = {
-        Name: userData.name,
-        Mail: userData.email || userData.mail,
-        Password: userData.password
+        name: userData.name,
+        mail: userData.email || userData.mail,
+        password: userData.password
       };
       
       const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
@@ -189,8 +189,8 @@ export const authService = {
       // Após o registro, fazer login automaticamente
       if (response.status === 201) {
         const loginCredentials = {
-          email: registerData.Mail,
-          password: registerData.Password
+          email: registerData.mail,
+          password: registerData.password
         };
         
         return await this.login(loginCredentials);
@@ -271,15 +271,15 @@ export const authService = {
       
       // Mapeia a resposta para o formato usado no frontend (camelCase)
       const user = {
-        id: userData.Id || userData.id,
-        name: userData.Name || userData.name,
-        email: userData.Mail || userData.mail,
-        address: userData.Address || userData.address ? {
-          id: (userData.Address || userData.address).Id || (userData.Address || userData.address).id,
-          street: (userData.Address || userData.address).Street || (userData.Address || userData.address).street,
-          postalCode: (userData.Address || userData.address).PostalCode || (userData.Address || userData.address).postalCode,
-          latitude: (userData.Address || userData.address).Latitude || (userData.Address || userData.address).latitude,
-          longitude: (userData.Address || userData.address).Longitude || (userData.Address || userData.address).longitude
+        id: userData.id,
+        name: userData.name,
+        email: userData.mail,
+        address: userData.address ? {
+          id: userData.address.id,
+          street: userData.address.street,
+          postalCode: userData.address.postalCode,
+          latitude: userData.address.latitude,
+          longitude: userData.address.longitude
         } : null
       };
       
@@ -299,11 +299,11 @@ export const authService = {
       }
 
       const createAddressData = {
-        StudentId: user.id,
-        Street: addressData.street,
-        PostalCode: addressData.postalCode,
-        Latitude: addressData.latitude,
-        Longitude: addressData.longitude
+        studentId: user.id,
+        street: addressData.street,
+        postalCode: addressData.postalCode,
+        latitude: addressData.latitude,
+        longitude: addressData.longitude
       };
 
       const response = await api.post(API_ENDPOINTS.ADDRESS.CREATE, createAddressData);
@@ -312,11 +312,11 @@ export const authService = {
       const updatedUser = {
         ...user,
         address: {
-          id: response.data.Id || response.data.id,
-          street: response.data.Street || response.data.street,
-          postalCode: response.data.PostalCode || response.data.postalCode,
-          latitude: response.data.Latitude || response.data.latitude,
-          longitude: response.data.Longitude || response.data.longitude
+          id: response.data.id,
+          street: response.data.street,
+          postalCode: response.data.postalCode,
+          latitude: response.data.latitude,
+          longitude: response.data.longitude
         }
       };
       
@@ -324,11 +324,11 @@ export const authService = {
       
       // Retorna dados em camelCase
       return {
-        id: response.data.Id || response.data.id,
-        street: response.data.Street || response.data.street,
-        postalCode: response.data.PostalCode || response.data.postalCode,
-        latitude: response.data.Latitude || response.data.latitude,
-        longitude: response.data.Longitude || response.data.longitude
+        id: response.data.id,
+        street: response.data.street,
+        postalCode: response.data.postalCode,
+        latitude: response.data.latitude,
+        longitude: response.data.longitude
       };
     } catch (error) {
       let message = ERROR_MESSAGES.DEFAULT;
@@ -349,10 +349,10 @@ export const authService = {
   async updateAddress(addressId, addressData) {
     try {
       const updateAddressData = {
-        Street: addressData.street,
-        PostalCode: addressData.postalCode,
-        Latitude: addressData.latitude,
-        Longitude: addressData.longitude
+        street: addressData.street,
+        postalCode: addressData.postalCode,
+        latitude: addressData.latitude,
+        longitude: addressData.longitude
       };
 
       const response = await api.put(API_ENDPOINTS.ADDRESS.UPDATE(addressId), updateAddressData);
@@ -363,11 +363,11 @@ export const authService = {
         const updatedUser = {
           ...user,
           address: {
-            id: response.data.Id || response.data.id,
-            street: response.data.Street || response.data.street,
-            postalCode: response.data.PostalCode || response.data.postalCode,
-            latitude: response.data.Latitude || response.data.latitude,
-            longitude: response.data.Longitude || response.data.longitude
+            id: response.data.id,
+            street: response.data.street,
+            postalCode: response.data.postalCode,
+            latitude: response.data.latitude,
+            longitude: response.data.longitude
           }
         };
         
@@ -376,11 +376,11 @@ export const authService = {
       
       // Retorna dados em camelCase
       return {
-        id: response.data.Id || response.data.id,
-        street: response.data.Street || response.data.street,
-        postalCode: response.data.PostalCode || response.data.postalCode,
-        latitude: response.data.Latitude || response.data.latitude,
-        longitude: response.data.Longitude || response.data.longitude
+        id: response.data.id,
+        street: response.data.street,
+        postalCode: response.data.postalCode,
+        latitude: response.data.latitude,
+        longitude: response.data.longitude
       };
     } catch (error) {
       let message = ERROR_MESSAGES.DEFAULT;
