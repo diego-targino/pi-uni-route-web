@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { busStopService } from '../services/busStopService';
 import '../styles/map.css';
 
-const BusStopPopup = ({ busStop }) => {
+const BusStopPopup = ({ busStop, onCalculateRoute, routeInfo, isCalculatingRoute }) => {
     const [stopTimes, setStopTimes] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -67,6 +67,31 @@ const BusStopPopup = ({ busStop }) => {
                 >
                     {isLoading ? 'Carregando...' : 'Ver Horários'}
                 </button>
+
+                <button
+                    className="calculate-route-btn"
+                    onClick={() => onCalculateRoute && onCalculateRoute(busStop)}
+                    disabled={isCalculatingRoute}
+                    style={{ marginTop: '0.5rem' }}
+                >
+                    {isCalculatingRoute ? 'Calculando...' : 'Calcular Rota'}
+                </button>
+
+                {/* Route information */}
+                {routeInfo && routeInfo.busStopId === busStop.id && (
+                    <div className="route-info">
+                        <h4>Informações da Rota</h4>
+                        <p className="bus-stop-coordinates">
+                            📏 Distância: {routeInfo.routeDistance < 1 ?
+                                `${Math.round(routeInfo.routeDistance * 1000)}m` :
+                                `${routeInfo.routeDistance.toFixed(1)}km`
+                            }
+                        </p>
+                        <p className="bus-stop-coordinates">
+                            🚶 Tempo caminhando: {routeInfo.walkingTime} min
+                        </p>
+                    </div>
+                )}
 
                 {showTimes && (
                     <div className="bus-stop-times">

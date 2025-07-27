@@ -29,16 +29,16 @@ const busStopIcon = new L.Icon(MARKER_ICONS.BUS_STOP);
 const userLocationIcon = new L.Icon(MARKER_ICONS.USER_LOCATION);
 
 // Component to handle routing
-const RoutingMachine = ({ userLocation, closestBusStop, onRouteFound }) => {
+const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
   const map = useMap();
   const routingControlRef = useRef(null);
   const lastRouteKey = useRef(null);
 
   useEffect(() => {
-    if (!userLocation || !closestBusStop || !map) return;
+    if (!userLocation || !targetBusStop || !map) return;
 
     // Create a unique key for this route to avoid unnecessary recreations
-    const currentRouteKey = `${userLocation.latitude}-${userLocation.longitude}-${closestBusStop.latitude}-${closestBusStop.longitude}`;
+    const currentRouteKey = `${userLocation.latitude}-${userLocation.longitude}-${targetBusStop.latitude}-${targetBusStop.longitude}`;
 
     // If the route hasn't changed, don't recreate the control
     if (lastRouteKey.current === currentRouteKey && routingControlRef.current) {
@@ -65,7 +65,7 @@ const RoutingMachine = ({ userLocation, closestBusStop, onRouteFound }) => {
         routingControlRef.current = L.Routing.control({
           waypoints: [
             L.latLng(userLocation.latitude, userLocation.longitude),
-            L.latLng(closestBusStop.latitude, closestBusStop.longitude)
+            L.latLng(targetBusStop.latitude, targetBusStop.longitude)
           ],
           routeWhileDragging: false,
           createMarker: () => null, // Don't create markers (we have our own)
@@ -78,7 +78,7 @@ const RoutingMachine = ({ userLocation, closestBusStop, onRouteFound }) => {
           fitSelectedRoutes: true,
           router: L.Routing.osrmv1({
             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            suppressDemoServerWarning: true // This suppresses the warning
+            suppressDemoServerWarning: true, // This suppresses the warning
           }),
           createContainer: () => {
             // Return empty div to prevent UI container creation
@@ -101,10 +101,11 @@ const RoutingMachine = ({ userLocation, closestBusStop, onRouteFound }) => {
             const walkingSpeedKmh = 4.5;
             const walkingTimeMinutes = (distanceInKm / walkingSpeedKmh) * 60;
 
-            // Update the closest bus stop with real route distance
+            // Update the target bus stop with real route distance
             if (onRouteFound) {
               onRouteFound({
-                ...closestBusStop,
+                ...targetBusStop,
+                busStopId: targetBusStop.id,
                 routeDistance: distanceInKm,
                 walkingTime: Math.ceil(walkingTimeMinutes) // Round up to be safe
               });
@@ -138,7 +139,7 @@ const RoutingMachine = ({ userLocation, closestBusStop, onRouteFound }) => {
         routingControlRef.current = null;
       }
     };
-  }, [map, userLocation?.latitude, userLocation?.longitude, closestBusStop?.latitude, closestBusStop?.longitude]);
+  }, [map, userLocation?.latitude, userLocation?.longitude, targetBusStop?.latitude, targetBusStop?.longitude]);
 
   return null;
 };
@@ -149,7 +150,9 @@ const Dashboard = () => {
   const [busStops, setBusStops] = useState([]);
   const [userLocation, setUserLocation] = useState(null);
   const [closestBusStop, setClosestBusStop] = useState(null);
+  const [selectedBusStop, setSelectedBusStop] = useState(null); // For custom route
   const [routeInfo, setRouteInfo] = useState(null);
+  const [isCalculatingRoute, setIsCalculatingRoute] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CITY_CENTER);
@@ -157,6 +160,19 @@ const Dashboard = () => {
   // Handle route found callback
   const handleRouteFound = (routeData) => {
     setRouteInfo(routeData);
+    setIsCalculatingRoute(false);
+  };
+
+  // Calculate route to specific bus stop
+  const handleCalculateRoute = (busStop) => {
+    if (!userLocation) {
+      setError('Localização do usuário não disponível');
+      return;
+    }
+    
+    setIsCalculatingRoute(true);
+    setSelectedBusStop(busStop);
+    setRouteInfo(null);
   };
 
   // Load bus stops
@@ -297,15 +313,19 @@ const Dashboard = () => {
                         user.address.postalCode}`}
                     </p>
                   )}
-                  {(closestBusStop || routeInfo) && (
+                  {(closestBusStop || routeInfo || selectedBusStop) && (
                     <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: '#3b82f6', fontWeight: '500' }}>
-                      🚌 Parada mais próxima: {(routeInfo || closestBusStop).name || `Parada ${(routeInfo || closestBusStop).id}`}
+                      🚌 {selectedBusStop ? 'Rota para:' : 'Parada mais próxima:'} {
+                        (routeInfo || selectedBusStop || closestBusStop).name || 
+                        `Parada ${(routeInfo || selectedBusStop || closestBusStop).id}`
+                      }
                       <br />
                       📏 Distância: {routeInfo?.routeDistance ?
                         (routeInfo.routeDistance < 1 ?
                           `${Math.round(routeInfo.routeDistance * 1000)}m (rota)` :
                           `${routeInfo.routeDistance.toFixed(1)}km (rota)`
-                        ) :
+                        ) : selectedBusStop ? 
+                        'Calculando...' :
                         (closestBusStop?.distance < 1 ?
                           `${Math.round(closestBusStop.distance * 1000)}m (linha reta)` :
                           `${closestBusStop.distance.toFixed(1)}km (linha reta)`
@@ -332,16 +352,21 @@ const Dashboard = () => {
               icon={busStopIcon}
             >
               <Popup>
-                <BusStopPopup busStop={stop} />
+                <BusStopPopup 
+                  busStop={stop} 
+                  onCalculateRoute={handleCalculateRoute}
+                  routeInfo={routeInfo}
+                  isCalculatingRoute={isCalculatingRoute}
+                />
               </Popup>
             </Marker>
           ))}
 
-          {/* Routing to closest bus stop */}
-          {userLocation && closestBusStop && (
+          {/* Routing to selected bus stop or closest bus stop */}
+          {userLocation && (selectedBusStop || closestBusStop) && (
             <RoutingMachine
               userLocation={userLocation}
-              closestBusStop={closestBusStop}
+              targetBusStop={selectedBusStop || closestBusStop}
               onRouteFound={handleRouteFound}
             />
           )}

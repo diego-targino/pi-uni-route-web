@@ -14,6 +14,13 @@ export const useAuthStore = create((set, get) => {
 
     // Login action
     login: async (credentials) => {
+      const currentState = get();
+      
+      // Prevent multiple simultaneous login attempts
+      if (currentState.isLoading) {
+        return;
+      }
+      
       set({ isLoading: true, error: null });
       try {
         const data = await authService.login(credentials);
@@ -34,12 +41,17 @@ export const useAuthStore = create((set, get) => {
 
     // Register action
     register: async (userData) => {
+      const currentState = get();
+      
+      // Prevent multiple simultaneous register attempts
+      if (currentState.isLoading) {
+        return;
+      }
+      
       set({ isLoading: true, error: null });
       try {
         const data = await authService.register(userData);
         set({ 
-          user: data.user, 
-          isAuthenticated: true, 
           isLoading: false 
         });
         return data;
@@ -50,7 +62,7 @@ export const useAuthStore = create((set, get) => {
         });
         throw error;
       }
-      },
+    },
 
     // Logout action
     logout: () => {

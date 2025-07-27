@@ -21,15 +21,46 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
-// Add request interceptor to include auth token
+// Request cache to prevent duplicate requests
+const requestCache = new Map();
+
+// Add request interceptor to include auth token and prevent duplicates
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    
+    // Create a unique key for this request (excluding timestamps for better duplicate detection)
+    const requestKey = `${config.method}-${config.url}-${JSON.stringify(config.data || {})}`;
+    
+    // Check if the same request is already in progress (for POST requests)
+    if (config.method === 'post' && requestCache.has(requestKey)) {
+      const cachedTime = requestCache.get(requestKey);
+      const timeDiff = Date.now() - cachedTime;
+      
+      // Only prevent duplicates if they're within 1 second of each other
+      if (timeDiff < 1000) {
+        const error = new Error('Duplicate request prevented');
+        error.name = 'DuplicateRequestError';
+        return Promise.reject(error);
+      }
+    }
+    
+    if (config.method === 'post') {
+      // Store the request in cache
+      requestCache.set(requestKey, Date.now());
+      
+      // Clean up cache after a reasonable time
+      setTimeout(() => {
+        requestCache.delete(requestKey);
+      }, 3000); // Reduced to 3 seconds for faster cleanup
+    }
+    
     return config;
   },
   (error) => {
@@ -37,10 +68,23 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle auth errors
+// Add response interceptor to handle auth errors and clean up cache
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // Clean up the request from cache when response is received
+    if (response.config && response.config.method === 'post') {
+      const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(response.config.data || {})}`;
+      requestCache.delete(requestKey);
+    }
+    return response;
+  },
   (error) => {
+    // Clean up the request from cache on error too (except for our duplicate prevention error)
+    if (error.config && error.config.method === 'post' && error.name !== 'DuplicateRequestError') {
+      const requestKey = `${error.config.method}-${error.config.url}-${JSON.stringify(error.config.data || {})}`;
+      requestCache.delete(requestKey);
+    }
+    
     if (error.response?.status === 401) {
       localStorage.removeItem(STORAGE_KEYS.TOKEN);
       localStorage.removeItem(STORAGE_KEYS.USER);
@@ -146,6 +190,10 @@ export const authService = {
         throw new Error('Dados de usuário não encontrados na resposta');
       }
     } catch (error) {
+      // Se é um erro de requisição duplicada, ignorar silenciosamente
+      if (error.name === 'DuplicateRequestError') {
+        throw new Error('Aguarde um momento antes de tentar novamente.');
+      }
       
       if (error.message.includes('EMAIL_') || error.message.includes('PASSWORD_')) {
         throw error;
@@ -186,18 +234,19 @@ export const authService = {
       const response = await api.post(API_ENDPOINTS.AUTH.REGISTER, registerData);
       
       // O registro retorna apenas status 201, sem dados do usuário
-      // Após o registro, fazer login automaticamente
+      // Não fazemos login automático, apenas confirmamos o registro
       if (response.status === 201) {
-        const loginCredentials = {
-          email: registerData.mail,
-          password: registerData.password
-        };
-        
-        return await this.login(loginCredentials);
+        return { success: true, message: 'Conta criada com sucesso!' };
       }
       
       return response.data;
     } catch (error) {
+      // Se é um erro de requisição duplicada, ignorar silenciosamente
+      if (error.name === 'DuplicateRequestError') {
+        throw new Error('Aguarde um momento antes de tentar novamente.');
+      }
+      
+      // Se é um erro de validação nosso, propagar
       if (error.message.includes('NAME_') || error.message.includes('EMAIL_') || error.message.includes('PASSWORD_')) {
         throw error;
       }

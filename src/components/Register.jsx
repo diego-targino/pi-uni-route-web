@@ -97,16 +97,34 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // Prevent multiple submissions
+    if (isLoading) {
+      return;
+    }
+    
     if (!validateForm()) {
       return;
     }
 
     try {
       const { confirmPassword, ...userData } = formData;
-      await register(userData);
-      navigate('/dashboard');
+      const result = await register(userData);
+      
+      // Mostrar mensagem de sucesso e redirecionar após um breve delay
+      if (result && result.success) {
+        // Pequeno delay para mostrar que foi bem-sucedido
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Conta criada com sucesso! Faça login para continuar.',
+              type: 'success'
+            }
+          });
+        }, 500);
+      }
     } catch (error) {
       // Error is already handled by the store
+      console.error('Registration error:', error);
     }
   };
 
@@ -211,7 +229,7 @@ const Register = () => {
             className={`auth-button ${isLoading ? 'loading' : ''}`}
             disabled={isLoading}
           >
-            {isLoading ? '' : 'Criar Conta'}
+            {isLoading ? 'Criando conta...' : 'Criar Conta'}
           </button>
         </form>
 

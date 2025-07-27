@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import '../styles/auth.css';
 
@@ -9,9 +9,20 @@ const Login = () => {
     password: ''
   });
   const [validationErrors, setValidationErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState('');
   
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, isLoading, error, clearError } = useAuthStore();
+
+  // Check for success message from registration
+  useEffect(() => {
+    if (location.state?.message && location.state?.type === 'success') {
+      setSuccessMessage(location.state.message);
+      // Clear the state to prevent the message from persisting on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -75,6 +86,12 @@ const Login = () => {
           <h1>Entrar</h1>
           <p>Acesse sua conta no UniRoute</p>
         </div>
+
+        {successMessage && (
+          <div className="alert success">
+            {successMessage}
+          </div>
+        )}
 
         {error && (
           <div className="alert error">
