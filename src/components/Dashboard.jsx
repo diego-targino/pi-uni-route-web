@@ -77,6 +77,7 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
           draggableWaypoints: false,
           fitSelectedRoutes: true,
           router: L.Routing.osrmv1({
+            profile: 'foot',
             serviceUrl: 'https://router.project-osrm.org/route/v1',
             suppressDemoServerWarning: true, // This suppresses the warning
           }),
