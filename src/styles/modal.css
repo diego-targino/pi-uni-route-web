@@ -1,4 +1,3 @@
-/* Estiliza o campo interno do geocoder (Leaflet Control Geocoder) */
 .leaflet-control-geocoder-form input[type="text"] {
   background: #23293a !important;
   color: #fff !important;

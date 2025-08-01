@@ -16,7 +16,6 @@ import {
 } from '../utils/mapUtils';
 import '../styles/map.css';
 
-// Fix for default markers in React Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: MARKER_ICONS.BUS_STOP.iconUrl,
@@ -45,17 +44,14 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
       return;
     }
 
-    // Remove existing routing control safely
     if (routingControlRef.current) {
       try {
         map.removeControl(routingControlRef.current);
       } catch (error) {
-        console.warn('Error removing routing control:', error);
       }
       routingControlRef.current = null;
     }
 
-    // Update the route key
     lastRouteKey.current = currentRouteKey;
 
     // Add a small delay to ensure map is ready
@@ -68,21 +64,19 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
             L.latLng(targetBusStop.latitude, targetBusStop.longitude)
           ],
           routeWhileDragging: false,
-          createMarker: () => null, // Don't create markers (we have our own)
+          createMarker: () => null,
           lineOptions: {
             styles: [{ color: '#3b82f6', weight: 4, opacity: 0.7 }]
           },
-          show: false, // Hide the instructions panel
+          show: false,
           addWaypoints: false,
           draggableWaypoints: false,
           fitSelectedRoutes: true,
           router: L.Routing.osrmv1({
             profile: 'foot',
             serviceUrl: 'https://router.project-osrm.org/route/v1',
-            suppressDemoServerWarning: true, // This suppresses the warning
           }),
           createContainer: () => {
-            // Return empty div to prevent UI container creation
             const div = document.createElement('div');
             div.style.display = 'none';
             return div;
@@ -114,28 +108,21 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
           }
         });
 
-        // Add error handling
         routingControlRef.current.on('routingerror', function (e) {
-          console.warn('Routing error:', e);
         });
 
-        // Add to map
         routingControlRef.current.addTo(map);
       } catch (error) {
-        console.error('Error creating routing control:', error);
       }
     }, 100);
 
     return () => {
-      // Clear timeout
       clearTimeout(timeoutId);
 
-      // Remove routing control safely
       if (routingControlRef.current && map) {
         try {
           map.removeControl(routingControlRef.current);
         } catch (error) {
-          console.warn('Error removing routing control on cleanup:', error);
         }
         routingControlRef.current = null;
       }
@@ -145,7 +132,6 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
   return null;
 };
 
-// Component to update map center when needed
 const MapCenterUpdater = ({ center }) => {
   const map = useMap();
   
@@ -234,12 +220,9 @@ const Dashboard = () => {
         });
         return currentLocation;
       } catch (locationError) {
-        console.warn('Could not get current location:', locationError.message);
-        // Keep default city center
         return null;
       }
     } catch (error) {
-      console.error('Error updating user location:', error);
       return null;
     }
   };
@@ -273,11 +256,9 @@ const Dashboard = () => {
             longitude: newLocation.longitude,
             zoom: 15
           });
-          // Clear any existing route info when location changes
           setRouteInfo(null);
           setSelectedBusStop(null);
           
-          // Show success message if this is not the initial load
           if (userLocation) {
             setAddressUpdatedMessage('📍 Endereço atualizado! Mapa recentrado na nova localização.');
             setTimeout(() => setAddressUpdatedMessage(null), 4000);
@@ -289,7 +270,6 @@ const Dashboard = () => {
     updateLocationFromUser();
   }, [user?.address?.latitude, user?.address?.longitude]);
 
-  // Initial data load
   useEffect(() => {
     const initializeDashboard = async () => {
       setIsLoading(true);
@@ -303,10 +283,8 @@ const Dashboard = () => {
     initializeDashboard();
   }, []);
 
-  // Handle address updates (legacy support)
   const handleAddressUpdate = async (wasUpdated = false) => {
     if (wasUpdated) {
-      // Address was successfully updated, refresh user location
       await updateUserLocation();
     }
   };
@@ -353,7 +331,6 @@ const Dashboard = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
 
-          {/* Component to update map center when address changes */}
           <MapCenterUpdater center={mapCenter} />
 
           {userLocation && (

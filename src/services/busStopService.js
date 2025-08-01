@@ -3,7 +3,6 @@ import { API_ENDPOINTS, ERROR_MESSAGES, STORAGE_KEYS } from '../constants';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5090';
 
-// Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,
   headers: {
@@ -11,7 +10,6 @@ const api = axios.create({
   },
 });
 
-// Add request interceptor to include auth token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -26,12 +24,10 @@ api.interceptors.request.use(
 );
 
 export const busStopService = {
-  // Get all bus stops
   async getAllBusStops() {
     try {
       const response = await api.get(API_ENDPOINTS.BUS_STOPS.LIST);
       
-      // Mapear resposta para camelCase se vier em PascalCase
       const data = Array.isArray(response.data) ? response.data : [];
       const busStops = data.map(stop => ({
         id: stop.id,
@@ -58,12 +54,10 @@ export const busStopService = {
     }
   },
 
-  // Get stop times for a specific bus stop
   async getStopTimes(busStopId) {
     try {
       const response = await api.get(API_ENDPOINTS.BUS_STOPS.STOP_TIMES(busStopId));
       
-      // Mapear resposta para camelCase baseado no formato real da API
       const data = Array.isArray(response.data) ? response.data : [];
       const stopTimes = data.map(time => ({
         id: time.Id || time.id,

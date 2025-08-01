@@ -15,11 +15,9 @@ const Login = () => {
   const location = useLocation();
   const { login, isLoading, error, clearError } = useAuthStore();
 
-  // Check for success message from registration
   useEffect(() => {
     if (location.state?.message && location.state?.type === 'success') {
       setSuccessMessage(location.state.message);
-      // Clear the state to prevent the message from persisting on refresh
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -31,7 +29,6 @@ const Login = () => {
       [name]: value
     }));
     
-    // Clear field error when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -39,7 +36,6 @@ const Login = () => {
       }));
     }
     
-    // Clear global error
     if (error) {
       clearError();
     }
@@ -73,9 +69,8 @@ const Login = () => {
 
     try {
       await login(formData);
-      navigate('/dashboard'); // Redirect to dashboard or main app
+      navigate('/dashboard');
     } catch (error) {
-      // Error is already handled by the store
     }
   };
 

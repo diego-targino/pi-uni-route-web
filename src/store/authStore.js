@@ -12,11 +12,9 @@ export const useAuthStore = create((set, get) => {
     isLoading: false,
     error: null,
 
-    // Login action
     login: async (credentials) => {
       const currentState = get();
       
-      // Prevent multiple simultaneous login attempts
       if (currentState.isLoading) {
         return;
       }
@@ -39,11 +37,9 @@ export const useAuthStore = create((set, get) => {
       }
     },
 
-    // Register action
     register: async (userData) => {
       const currentState = get();
       
-      // Prevent multiple simultaneous register attempts
       if (currentState.isLoading) {
         return;
       }
@@ -64,7 +60,6 @@ export const useAuthStore = create((set, get) => {
       }
     },
 
-    // Logout action
     logout: () => {
       authService.logout();
       set({ 
@@ -74,18 +69,15 @@ export const useAuthStore = create((set, get) => {
       });
     },
 
-    // Clear error action
     clearError: () => {
       set({ error: null });
     },
 
-    // Update user action
     updateUser: (userData) => {
       set({ user: userData });
       localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
     },
 
-    // Create address action
     createAddress: async (addressData) => {
       set({ isLoading: true, error: null });
       try {
@@ -117,7 +109,6 @@ export const useAuthStore = create((set, get) => {
       }
     },
 
-    // Update address action
     updateAddress: async (addressId, addressData) => {
       set({ isLoading: true, error: null });
       try {

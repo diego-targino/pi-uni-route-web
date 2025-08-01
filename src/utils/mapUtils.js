@@ -1,15 +1,5 @@
-// Utility functions for map operations
-
-/**
- * Calculate the distance between two coordinates using Haversine formula
- * @param {number} lat1 - Latitude of first point
- * @param {number} lon1 - Longitude of first point
- * @param {number} lat2 - Latitude of second point
- * @param {number} lon2 - Longitude of second point
- * @returns {number} Distance in kilometers
- */
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
-  const R = 6371; // Earth's radius in kilometers
+  const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
   const a =
@@ -116,11 +106,6 @@ export const MARKER_ICONS = {
   }
 };
 
-/**
- * Format distance for display
- * @param {number} distance - Distance in kilometers
- * @returns {string} Formatted distance string
- */
 export const formatDistance = (distance) => {
   if (distance < 1) {
     return `${Math.round(distance * 1000)}m`;
@@ -128,10 +113,6 @@ export const formatDistance = (distance) => {
   return `${distance.toFixed(1)}km`;
 };
 
-/**
- * Get user's current location
- * @returns {Promise<Object>} Promise that resolves to {latitude, longitude}
- */
 export const getCurrentLocation = () => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -164,7 +145,7 @@ export const getCurrentLocation = () => {
       {
         enableHighAccuracy: true,
         timeout: 10000,
-        maximumAge: 300000 // 5 minutes
+        maximumAge: 300000
       }
     );
   });

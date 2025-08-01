@@ -21,11 +21,9 @@ const AddressForm = ({ onClose }) => {
   const searchInputRef = useRef(null);
 
   const handleLocationSelect = (mapInstance, lat, lng, address, postalCode) => {
-    // Remove todos os marcadores existentes antes de adicionar/atualizar
     if (marker) {
       marker.setLatLng([lat, lng]);
     } else {
-      // Remove todos os marcadores do mapa
       mapInstance.eachLayer(layer => {
         if (layer instanceof L.Marker) {
           mapInstance.removeLayer(layer);
@@ -141,10 +139,8 @@ const AddressForm = ({ onClose }) => {
   };
 
   const formatPostalCode = (value) => {
-    // Remove all non-digits
     const digits = value.replace(/\D/g, '');
     
-    // Format as XXXXX-XXX
     if (digits.length <= 5) {
       return digits;
     } else {

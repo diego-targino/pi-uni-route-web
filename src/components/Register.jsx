@@ -44,12 +44,10 @@ const Register = () => {
       [name]: value
     }));
     
-    // Calculate password strength
     if (name === 'password') {
       setPasswordStrength(calculatePasswordStrength(value));
     }
     
-    // Clear field error when user starts typing
     if (validationErrors[name]) {
       setValidationErrors(prev => ({
         ...prev,
@@ -57,7 +55,6 @@ const Register = () => {
       }));
     }
     
-    // Clear global error
     if (error) {
       clearError();
     }
@@ -97,7 +94,6 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
     if (isLoading) {
       return;
     }
@@ -112,7 +108,6 @@ const Register = () => {
       
       // Mostrar mensagem de sucesso e redirecionar após um breve delay
       if (result && result.success) {
-        // Pequeno delay para mostrar que foi bem-sucedido
         setTimeout(() => {
           navigate('/login', { 
             state: { 
@@ -123,8 +118,6 @@ const Register = () => {
         }, 500);
       }
     } catch (error) {
-      // Error is already handled by the store
-      console.error('Registration error:', error);
     }
   };
 

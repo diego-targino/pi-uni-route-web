@@ -1,9 +1,8 @@
 import axios from 'axios';
 import { API_ENDPOINTS, ERROR_MESSAGES, STORAGE_KEYS } from '../constants';
-
+    
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5090';
 
-// Verificar se localStorage está disponível
 const isLocalStorageAvailable = () => {
   try {
     const test = '__localStorage_test__';
@@ -15,19 +14,16 @@ const isLocalStorageAvailable = () => {
   }
 };
 
-// Create axios instance with base configuration
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10 second timeout
+  timeout: 10000,
 });
 
-// Request cache to prevent duplicate requests
 const requestCache = new Map();
 
-// Add request interceptor to include auth token and prevent duplicates
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem(STORAGE_KEYS.TOKEN);
@@ -35,15 +31,12 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
     
-    // Create a unique key for this request (excluding timestamps for better duplicate detection)
     const requestKey = `${config.method}-${config.url}-${JSON.stringify(config.data || {})}`;
     
-    // Check if the same request is already in progress (for POST requests)
     if (config.method === 'post' && requestCache.has(requestKey)) {
       const cachedTime = requestCache.get(requestKey);
       const timeDiff = Date.now() - cachedTime;
       
-      // Only prevent duplicates if they're within 1 second of each other
       if (timeDiff < 1000) {
         const error = new Error('Duplicate request prevented');
         error.name = 'DuplicateRequestError';
@@ -52,13 +45,11 @@ api.interceptors.request.use(
     }
     
     if (config.method === 'post') {
-      // Store the request in cache
       requestCache.set(requestKey, Date.now());
       
-      // Clean up cache after a reasonable time
       setTimeout(() => {
         requestCache.delete(requestKey);
-      }, 3000); // Reduced to 3 seconds for faster cleanup
+      }, 3000);
     }
     
     return config;
@@ -68,10 +59,8 @@ api.interceptors.request.use(
   }
 );
 
-// Add response interceptor to handle auth errors and clean up cache
 api.interceptors.response.use(
   (response) => {
-    // Clean up the request from cache when response is received
     if (response.config && response.config.method === 'post') {
       const requestKey = `${response.config.method}-${response.config.url}-${JSON.stringify(response.config.data || {})}`;
       requestCache.delete(requestKey);
@@ -79,7 +68,6 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Clean up the request from cache on error too (except for our duplicate prevention error)
     if (error.config && error.config.method === 'post' && error.name !== 'DuplicateRequestError') {
       const requestKey = `${error.config.method}-${error.config.url}-${JSON.stringify(error.config.data || {})}`;
       requestCache.delete(requestKey);
@@ -95,13 +83,11 @@ api.interceptors.response.use(
 );
 
 export const authService = {
-  // Validação de email
   _validateEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   },
 
-  // Validação básica de campos obrigatórios
   _validateLoginFields(credentials) {
     const errors = [];
     
@@ -140,16 +126,13 @@ export const authService = {
     return errors;
   },
 
-  // Login user
   async login(credentials) {
     try {
-      // Validação dos campos
       const validationErrors = this._validateLoginFields(credentials);
       if (validationErrors.length > 0) {
         throw new Error(validationErrors[0]);
       }
 
-      // Mapeia os campos para o formato esperado pela API
       const loginData = {
         mail: credentials.email || credentials.mail,
         password: credentials.password
