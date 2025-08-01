@@ -15,11 +15,11 @@ const FloatingMenu = ({ onAddressUpdate }) => {
     navigate('/login');
   };
 
-  const handleAddressClose = () => {
+  const handleAddressClose = (wasUpdated = false) => {
     setShowAddressForm(false);
     // Notify parent component that address might have been updated
     if (onAddressUpdate) {
-      onAddressUpdate();
+      onAddressUpdate(wasUpdated);
     }
   };
 
@@ -71,13 +71,6 @@ const FloatingMenu = ({ onAddressUpdate }) => {
               onClick={() => setShowAddressForm(true)}
             >
               {user?.address ? '✏️ Editar Endereço' : '➕ Adicionar Endereço'}
-            </button>
-
-            <button
-              className="floating-menu-btn secondary"
-              onClick={() => window.location.reload()}
-            >
-              🔄 Atualizar Mapa
             </button>
 
             <button

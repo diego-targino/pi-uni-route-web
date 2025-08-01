@@ -145,6 +145,22 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
   return null;
 };
 
+// Component to update map center when needed
+const MapCenterUpdater = ({ center }) => {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (center && center.latitude && center.longitude) {
+      map.setView([center.latitude, center.longitude], center.zoom || 15, {
+        animate: true,
+        duration: 1
+      });
+    }
+  }, [map, center.latitude, center.longitude, center.zoom]);
+
+  return null;
+};
+
 const Dashboard = () => {
   const { user, isAuthenticated } = useAuthStore();
   const navigate = useNavigate();
@@ -157,6 +173,7 @@ const Dashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CITY_CENTER);
+  const [addressUpdatedMessage, setAddressUpdatedMessage] = useState(null);
 
   // Handle route found callback
   const handleRouteFound = (routeData) => {
@@ -237,6 +254,41 @@ const Dashboard = () => {
     }
   }, [userLocation, busStops]);
 
+  // Listen for address changes in user object
+  useEffect(() => {
+    const updateLocationFromUser = async () => {
+      if (user?.address?.latitude && user?.address?.longitude) {
+        const newLocation = {
+          latitude: user.address.latitude,
+          longitude: user.address.longitude
+        };
+        
+        // Only update if location actually changed
+        if (!userLocation || 
+            userLocation.latitude !== newLocation.latitude || 
+            userLocation.longitude !== newLocation.longitude) {
+          setUserLocation(newLocation);
+          setMapCenter({
+            latitude: newLocation.latitude,
+            longitude: newLocation.longitude,
+            zoom: 15
+          });
+          // Clear any existing route info when location changes
+          setRouteInfo(null);
+          setSelectedBusStop(null);
+          
+          // Show success message if this is not the initial load
+          if (userLocation) {
+            setAddressUpdatedMessage('📍 Endereço atualizado! Mapa recentrado na nova localização.');
+            setTimeout(() => setAddressUpdatedMessage(null), 4000);
+          }
+        }
+      }
+    };
+
+    updateLocationFromUser();
+  }, [user?.address?.latitude, user?.address?.longitude]);
+
   // Initial data load
   useEffect(() => {
     const initializeDashboard = async () => {
@@ -249,11 +301,14 @@ const Dashboard = () => {
     };
 
     initializeDashboard();
-  }, [user]);
+  }, []);
 
-  // Handle address updates
-  const handleAddressUpdate = async () => {
-    await updateUserLocation();
+  // Handle address updates (legacy support)
+  const handleAddressUpdate = async (wasUpdated = false) => {
+    if (wasUpdated) {
+      // Address was successfully updated, refresh user location
+      await updateUserLocation();
+    }
   };
 
   // Verifica se está autenticado mas não tem usuário
@@ -297,6 +352,9 @@ const Dashboard = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
+
+          {/* Component to update map center when address changes */}
+          <MapCenterUpdater center={mapCenter} />
 
           {userLocation && (
             <Marker
@@ -393,6 +451,27 @@ const Dashboard = () => {
             zIndex: 1000
           }}>
             {error}
+          </div>
+        )}
+
+        {/* Success message for address update */}
+        {addressUpdatedMessage && (
+          <div style={{
+            position: 'fixed',
+            bottom: error ? '80px' : '20px', // Position above error if both are shown
+            left: '20px',
+            right: '20px',
+            background: '#d1fae5',
+            border: '1px solid #a7f3d0',
+            borderRadius: '0.5rem',
+            padding: '1rem',
+            color: '#065f46',
+            fontSize: '0.875rem',
+            textAlign: 'center',
+            zIndex: 1000,
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+          }}>
+            {addressUpdatedMessage}
           </div>
         )}
       </div>

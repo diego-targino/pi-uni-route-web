@@ -399,7 +399,7 @@ export const authService = {
     try {
       const updateAddressData = {
         street: addressData.street,
-        postalCode: addressData.postalCode,
+        postalCode: addressData.postalCode.replace('-', ''),
         latitude: addressData.latitude,
         longitude: addressData.longitude
       };

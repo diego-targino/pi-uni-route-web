@@ -20,7 +20,7 @@ const AddressForm = ({ onClose }) => {
   const [search, setSearch] = useState('');
   const searchInputRef = useRef(null);
 
-  const handleLocationSelect = (mapInstance, lat, lng, address) => {
+  const handleLocationSelect = (mapInstance, lat, lng, address, postalCode) => {
     // Remove todos os marcadores existentes antes de adicionar/atualizar
     if (marker) {
       marker.setLatLng([lat, lng]);
@@ -43,7 +43,8 @@ const AddressForm = ({ onClose }) => {
       ...prev,
       street: address,
       latitude: lat,
-      longitude: lng
+      longitude: lng,
+      postalCode: postalCode
     }));
   }
 
@@ -80,7 +81,8 @@ const AddressForm = ({ onClose }) => {
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=pt-BR`)
         .then(res => res.json())
         .then(data => {
-          handleLocationSelect(mapInstance, lat, lng, data.display_name);
+          const streetName = `${data.address?.road || ''}, ${data.address?.town || ''}, ${data.address?.state || ''}`;
+          handleLocationSelect(mapInstance, lat, lng, streetName, data.address?.postcode || '63700000');
         });
     });
 
@@ -203,18 +205,19 @@ const AddressForm = ({ onClose }) => {
         await createAddress(addressData);
       }
       
-      onClose();
+      // Notify parent that address was successfully updated
+      onClose(true);
     } catch (error) {
       // Error is already handled by the store
     }
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={() => onClose(false)}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{isEditing ? 'Editar Endereço' : 'Adicionar Endereço'}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={() => onClose(false)}>×</button>
         </div>
 
         {error && (
@@ -268,7 +271,7 @@ const AddressForm = ({ onClose }) => {
             <div className="form-actions">
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => onClose(false)}
                 className="btn btn-secondary"
               >
                 Cancelar
