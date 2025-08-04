@@ -227,6 +227,26 @@ const Dashboard = () => {
     }
   };
 
+  // Refresh map data - reload bus stops and update user location
+  const refreshMap = async () => {
+    setIsLoading(true);
+    setError(null);
+    setSelectedBusStop(null);
+    setRouteInfo(null);
+    setIsCalculatingRoute(false);
+    
+    try {
+      await Promise.all([
+        loadBusStops(),
+        updateUserLocation()
+      ]);
+    } catch (error) {
+      setError('Erro ao atualizar dados do mapa');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Calculate closest bus stop when data changes
   useEffect(() => {
     if (userLocation && busStops.length > 0) {
@@ -285,7 +305,13 @@ const Dashboard = () => {
 
   const handleAddressUpdate = async (wasUpdated = false) => {
     if (wasUpdated) {
-      await updateUserLocation();
+      // Show success message - the automatic refresh will happen via useEffect
+      setAddressUpdatedMessage('📍 Endereço atualizado com sucesso! Mapa sendo atualizado...');
+      
+      // Clear success message after a delay
+      setTimeout(() => {
+        setAddressUpdatedMessage(null);
+      }, 3000);
     }
   };
 
@@ -409,7 +435,11 @@ const Dashboard = () => {
         </MapContainer>
 
         {/* Floating menu */}
-        <FloatingMenu onAddressUpdate={handleAddressUpdate} />
+        <FloatingMenu 
+          onAddressUpdate={handleAddressUpdate} 
+          onRefreshMap={refreshMap}
+          isLoading={isLoading}
+        />
 
         {/* Error display */}
         {error && (

@@ -132,14 +132,26 @@
   transform: translateY(-1px);
 }
 
+.floating-menu-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .floating-menu-btn.secondary {
   background: var(--surface);
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
 
-.floating-menu-btn.secondary:hover {
+.floating-menu-btn.secondary:hover:not(:disabled) {
   background: var(--surface-hover);
+}
+
+.floating-menu-btn.secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .floating-menu-btn.danger {

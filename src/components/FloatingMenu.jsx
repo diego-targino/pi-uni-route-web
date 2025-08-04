@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import AddressForm from './AddressForm';
 import '../styles/map.css';
 
-const FloatingMenu = ({ onAddressUpdate }) => {
+const FloatingMenu = ({ onAddressUpdate, onRefreshMap, isLoading }) => {
   const { user, logout } = useAuthStore();
   const navigate = useNavigate();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -71,6 +71,14 @@ const FloatingMenu = ({ onAddressUpdate }) => {
               onClick={() => setShowAddressForm(true)}
             >
               {user?.address ? '✏️ Editar Endereço' : '➕ Adicionar Endereço'}
+            </button>
+
+            <button
+              className="floating-menu-btn secondary"
+              onClick={onRefreshMap}
+              disabled={isLoading}
+            >
+              {isLoading ? '🔄 Atualizando...' : '🔄 Atualizar Mapa'}
             </button>
 
             <button
