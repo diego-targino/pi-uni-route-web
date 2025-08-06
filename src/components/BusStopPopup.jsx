@@ -69,12 +69,17 @@ const BusStopPopup = ({ busStop, onCalculateRoute, routeInfo, isCalculatingRoute
                 </button>
 
                 <button
-                    className="calculate-route-btn"
+                    className={`calculate-route-btn ${routeInfo && routeInfo.busStopId === busStop.id ? 'calculated' : ''}`}
                     onClick={() => onCalculateRoute && onCalculateRoute(busStop)}
                     disabled={isCalculatingRoute}
                     style={{ marginTop: '0.5rem' }}
                 >
-                    {isCalculatingRoute ? 'Calculando...' : 'Calcular Rota'}
+                    {isCalculatingRoute && routeInfo?.busStopId !== busStop.id ? 
+                        'Calculando...' : 
+                        routeInfo && routeInfo.busStopId === busStop.id ? 
+                        'Rota Calculada' : 
+                        'Calcular Rota'
+                    }
                 </button>
 
                 {/* Route information */}

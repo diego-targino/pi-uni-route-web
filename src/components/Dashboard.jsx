@@ -32,6 +32,7 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
   const map = useMap();
   const routingControlRef = useRef(null);
   const lastRouteKey = useRef(null);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (!userLocation || !targetBusStop || !map) return;
@@ -53,6 +54,11 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
     }
 
     lastRouteKey.current = currentRouteKey;
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
     // Add a small delay to ensure map is ready
     const timeoutId = setTimeout(() => {
@@ -109,14 +115,39 @@ const RoutingMachine = ({ userLocation, targetBusStop, onRouteFound }) => {
         });
 
         routingControlRef.current.on('routingerror', function (e) {
+          // Em caso de erro na rota, ainda chamar o callback para resetar o loading
+          if (onRouteFound) {
+            onRouteFound({
+              ...targetBusStop,
+              busStopId: targetBusStop.id,
+              routeDistance: 0,
+              walkingTime: 0,
+              error: 'Erro ao calcular rota'
+            });
+          }
         });
 
         routingControlRef.current.addTo(map);
       } catch (error) {
+        // Em caso de erro, chamar o callback para resetar o loading
+        if (onRouteFound) {
+          onRouteFound({
+            ...targetBusStop,
+            busStopId: targetBusStop.id,
+            routeDistance: 0,
+            walkingTime: 0,
+            error: 'Erro ao criar controle de rota'
+          });
+        }
       }
     }, 100);
 
+    timeoutRef.current = timeoutId;
+
     return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
       clearTimeout(timeoutId);
 
       if (routingControlRef.current && map) {
@@ -160,9 +191,16 @@ const Dashboard = () => {
   const [error, setError] = useState(null);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CITY_CENTER);
   const [addressUpdatedMessage, setAddressUpdatedMessage] = useState(null);
+  const routeTimeoutRef = useRef(null);
 
   // Handle route found callback
   const handleRouteFound = (routeData) => {
+    // Clear any existing timeout
+    if (routeTimeoutRef.current) {
+      clearTimeout(routeTimeoutRef.current);
+      routeTimeoutRef.current = null;
+    }
+    
     setRouteInfo(routeData);
     setIsCalculatingRoute(false);
   };
@@ -174,9 +212,31 @@ const Dashboard = () => {
       return;
     }
     
+    // Se já estamos calculando rota para a mesma parada, não fazer nada
+    if (isCalculatingRoute && selectedBusStop && selectedBusStop.id === busStop.id) {
+      return;
+    }
+    
+    // Se a rota já existe para esta parada, não recalcular
+    if (routeInfo && routeInfo.busStopId === busStop.id) {
+      return;
+    }
+    
+    // Clear any existing timeout
+    if (routeTimeoutRef.current) {
+      clearTimeout(routeTimeoutRef.current);
+    }
+    
     setIsCalculatingRoute(true);
     setSelectedBusStop(busStop);
     setRouteInfo(null);
+    
+    // Timeout de segurança para resetar o estado de carregamento
+    routeTimeoutRef.current = setTimeout(() => {
+      setIsCalculatingRoute(false);
+      setError('Timeout ao calcular rota. Tente novamente.');
+      routeTimeoutRef.current = null;
+    }, 15000); // 15 segundos timeout
   };
 
   // Load bus stops
@@ -229,11 +289,17 @@ const Dashboard = () => {
 
   // Refresh map data - reload bus stops and update user location
   const refreshMap = async () => {
+    // Clear any existing timeout
+    if (routeTimeoutRef.current) {
+      clearTimeout(routeTimeoutRef.current);
+      routeTimeoutRef.current = null;
+    }
+    
     setIsLoading(true);
     setError(null);
     setSelectedBusStop(null);
     setRouteInfo(null);
-    setIsCalculatingRoute(false);
+    setIsCalculatingRoute(false); // Reset calculating state
     
     try {
       await Promise.all([
@@ -301,6 +367,13 @@ const Dashboard = () => {
     };
 
     initializeDashboard();
+    
+    // Cleanup timeout on unmount
+    return () => {
+      if (routeTimeoutRef.current) {
+        clearTimeout(routeTimeoutRef.current);
+      }
+    };
   }, []);
 
   const handleAddressUpdate = async (wasUpdated = false) => {

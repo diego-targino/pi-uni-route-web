@@ -344,6 +344,15 @@
   cursor: not-allowed;
 }
 
+/* Estilo para quando a rota já foi calculada */
+.calculate-route-btn.calculated {
+  background: #10b981;
+}
+
+.calculate-route-btn.calculated:hover:not(:disabled) {
+  background: #059669;
+}
+
 .route-info {
   margin-top: 0.75rem;
   padding: 0.75rem;
